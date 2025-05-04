@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>ゴージャスABCタイピング</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #ffe0f0, #d0e8ff);
+    }
+
+    #container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      text-align: center;
+      position: relative;
+    }
+
+    #letter {
+      font-size: 18rem;
+      font-weight: bold;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.1);
+      }
+    }
+
+    #character {
+      width: 250px;
+      margin-top: -50px;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% {
+        transform: translateY(0);
+      }
+      50% {
+        transform: translateY(-10px);
+      }
+    }
+
+    #message {
+      font-size: 2rem;
+      color: #333;
+      margin-top: 1rem;
+      font-weight: bold;
+    }
+
+    .star {
+      position: absolute;
+      font-size: 2rem;
+      pointer-events: none;
+      animation: fly 1s ease-out forwards;
+    }
+
+    @keyframes fly {
+      0% {
+        transform: translate(0, 0) scale(1);
+        opacity: 1;
+      }
+      100% {
+        transform: translate(var(--x), var(--y)) scale(1.5);
+        opacity: 0;
+      }
+    }
+
+    #congrats {
+      position: absolute;
+      top: 30%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 5rem;
+      font-weight: bold;
+      color: gold;
+      text-shadow:
+        0 0 10px gold,
+        0 0 20px orange,
+        0 0 30px red;
+      background: linear-gradient(to right, gold, orange, gold);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      opacity: 0;
+      animation: fadeInUp 2s ease-out forwards;
+    }
+
+    @keyframes fadeInUp {
+      0% {
+        transform: translate(-50%, 30%);
+        opacity: 0;
+      }
+      100% {
+        transform: translate(-50%, -50%);
+        opacity: 1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <div id="letter">A</div>
+    <img id="character" src="images/kuma.png" alt="くま">
+
+    <div id="message"></div>
+    <div id="congrats"></div>
+  </div>
+
+  <script>
+    const fullAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+    let availableLetters = [...fullAlphabet];
+    let currentLetter = '';
+    let gameCleared = false;
+
+    function getRandomPastelColor() {
+      const hue = Math.floor(Math.random() * 360);
+      return `hsl(${hue}, 70%, 80%)`;
+    }
+
+    function pickNewLetter() {
+      if (availableLetters.length === 0) {
+        showCongrats();
+        return;
+      }
+
+      const index = Math.floor(Math.random() * availableLetters.length);
+      currentLetter = availableLetters.splice(index, 1)[0];
+
+      const color = getRandomPastelColor();
+      const shadowColor = getRandomPastelColor();
+
+      const letterElem = document.getElementById("letter");
+      letterElem.textContent = currentLetter;
+      letterElem.style.color = color;
+      letterElem.style.textShadow = `
+        0 0 10px ${shadowColor},
+        0 0 20px ${shadowColor},
+        0 0 30px ${shadowColor},
+        0 0 40px ${shadowColor}
+      `;
+
+      document.getElementById("message").textContent = '';
+    }
+
+    function showStars(x, y, count = 20) {
+      for (let i = 0; i < count; i++) {
+        const star = document.createElement("div");
+        star.className = "star";
+        star.textContent = "⭐";
+
+        const angle = Math.random() * 2 * Math.PI;
+        const radius = 100 + Math.random() * 100;
+
+        const offsetX = Math.cos(angle) * radius;
+        const offsetY = Math.sin(angle) * radius;
+
+        star.style.left = `${x}px`;
+        star.style.top = `${y}px`;
+        star.style.setProperty('--x', `${offsetX}px`);
+        star.style.setProperty('--y', `${offsetY}px`);
+
+        document.body.appendChild(star);
+        setTimeout(() => star.remove(), 1000);
+      }
+    }
+
+    function showCongrats() {
+      gameCleared = true;
+      const congrats = document.getElementById("congrats");
+      congrats.textContent = "コンプリート！🎉";
+
+      // 大量の星を中央に出す
+      const rect = document.getElementById("letter").getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      showStars(centerX, centerY, 100);
+
+      setTimeout(() => {
+        congrats.textContent = "";
+        gameCleared = false;
+        availableLetters = [...fullAlphabet];
+        pickNewLetter();
+      }, 5000);
+    }
+
+    document.addEventListener("keydown", (e) => {
+      if (gameCleared) return;
+
+      const pressed = e.key.toUpperCase();
+      if (pressed === currentLetter) {
+        document.getElementById("message").textContent = "すごいね！🎉";
+        const rect = document.getElementById("letter").getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        showStars(centerX, centerY);
+        setTimeout(pickNewLetter, 1500);
+      } else {
+        document.getElementById("message").textContent = "ちがうよ〜！";
+      }
+    });
+
+    pickNewLetter();
+  </script>
+</body>
+</html>
